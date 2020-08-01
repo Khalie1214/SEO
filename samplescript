@@ -1,0 +1,48 @@
+#!/bin/bash
+#echo "Hello World!"
+
+used=$( free | grep Mem: | awk ' {print $3} ' )
+totmem=$( free | grep Mem: | awk ' {print $2} ')
+#let "crit = totmem * 90/100"
+#echo "$used"
+#echo "$totmem"
+#echo "$crit"
+#if [ "$used" -gt "$crit" ]
+#then
+#  echo "Memory Critical"
+#else
+#  echo "Memory Minimum level"
+#fi
+
+while getopts 'c:w:e:' opt;
+	do
+		case $opt in
+			c) crit="$OPTARG";;
+			w) warn="$OPTARG";;
+			e) email="$OPTARG";;
+		esac
+	done
+
+if [ "$crit" = "" ] || [ "$warn" = "" ]
+then
+   echo "please enter critical and warning level"
+elif [ "$crit" -lt "$warn" ] || [ "$warn" -gt "$crit" ] 
+then 
+   echo "Critical level should be higher than the warning level"
+fi
+
+echo "Critical level is $crit percent"
+echo "Warning level is $warn percent"
+let "critical = totmem * crit/100"
+let "warning = totmem * warn/100"
+echo "Used Memory is $used"
+echo "Total Memory is $totmem"
+echo "Critical Level is above $critical"
+echo "Warning Level is above $warning and below $critical"
+
+if [ "$used" -gt "$critical" ]
+then
+	echo "Memory is in Critical Level" | mailx -s 'Memory Critical' $email
+else
+	echo "Memory not in Critical Level" | mailx -s 'Memory Critical' $email	
+fi
